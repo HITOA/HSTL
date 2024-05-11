@@ -5,8 +5,9 @@
 #ifndef HSTL_ALLOCATOR_HPP
 #define HSTL_ALLOCATOR_HPP
 
-#include <cstddef>
-#include <cstdlib>
+#include <stddef.h>
+#include <stdlib.h>
+#include <string.h>
 
 namespace HSTL {
 
@@ -16,16 +17,24 @@ namespace HSTL {
     };
 
     template<size_t Alignment = 8U>
-    class Mallocator {
+    class Allocator {
     public:
-        Mallocator() noexcept = default;
-        ~Mallocator() noexcept = default;
+        Allocator() noexcept = default;
+        ~Allocator() noexcept = default;
 
         AllocBlk allocate(size_t size) {
             AllocBlk blk{};
             blk.ptr = aligned_alloc(Alignment, size);
             blk.size = size;
             return blk;
+        }
+        AllocBlk reallocate(AllocBlk blk, size_t new_size) {
+            AllocBlk new_blk{};
+            new_blk.ptr = aligned_alloc(Alignment, new_size);
+            new_blk.size = new_size;
+            memcpy(new_blk.ptr, blk.ptr, blk.size);
+            free(blk.ptr);
+            return new_blk;
         }
         void deallocate(AllocBlk blk) {
             free(blk.ptr);
